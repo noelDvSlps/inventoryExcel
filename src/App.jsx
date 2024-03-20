@@ -44,11 +44,15 @@ function App() {
 
     sortedData = refSort.current.ascending
       ? key === "wipQty"
-        ? dataTable.sort((a, b) => a[key] - b[key])
-        : dataTable.sort((a, b) => a[key].localeCompare(b[key]))
+        ? dataTable.sort((a, b) => a[key] - b[key]) ||
+          dataTable.sort((a, b) => a[key].localeCompare(b["mohId"]))
+        : dataTable.sort((a, b) => a[key].localeCompare(b[key])) ||
+          dataTable.sort((a, b) => a[key].localeCompare(b["mohId"]))
       : key === "wipQty"
-      ? dataTable.sort((a, b) => b[key] - a[key])
-      : dataTable.sort((a, b) => b[key].localeCompare(a[key]));
+      ? dataTable.sort((a, b) => b[key] - a[key]) ||
+        dataTable.sort((a, b) => a[key].localeCompare(b["mohId"]))
+      : dataTable.sort((a, b) => b[key].localeCompare(a[key])) ||
+        dataTable.sort((a, b) => a[key].localeCompare(b["mohId"]));
 
     setTimeout(() => {
       setDataTable(sortedData);
