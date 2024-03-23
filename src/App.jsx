@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { uid } from "uid";
 import * as XLSX from "xlsx";
 import "./App.css";
@@ -9,6 +9,10 @@ function App() {
   const [dataTable, setDataTable] = useState([]);
   const [fields, setFields] = useState([]);
   const refSort = useRef({ key: "mohId", ascending: true });
+  const refValue = useRef("");
+  const refInsertRow = useRef(false);
+  const refTotalWip = useRef(0);
+  const refTempQty = useRef(0);
   const getWips = async () => {
     const wips = await getInventoryWips();
     setData(wips.data);
@@ -128,24 +132,97 @@ function App() {
                 </tr>
 
                 {dataTable.map((item, index) => {
+                  const keyToUse = refSort.current.key;
+                  if (refInsertRow.current === true) {
+                    refTotalWip.current = refTempQty.current;
+                  }
+
+                  if (
+                    index > 0 &&
+                    (keyToUse === "mohId" || keyToUse === "item")
+                  ) {
+                    if (refValue.current !== item[keyToUse]) {
+                      refValue.current = item[keyToUse];
+                      refTempQty.current = item.wipQty;
+                      refInsertRow.current = true;
+                    } else {
+                      // correct
+                      refInsertRow.current = false;
+                      refTotalWip.current = refTotalWip.current + item.wipQty;
+                    }
+                  } else {
+                    // correct
+                    refValue.current = item[keyToUse];
+                    refInsertRow.current = false;
+                    refTotalWip.current = item.wipQty;
+                  }
+                  console.log("refTotalWip.current");
+                  console.log(refTotalWip.current);
                   return (
-                    <tr key={index}>
-                      {Object.keys(item).map((key3, index) => {
-                        if (fields.includes(key3)) {
-                          return (
-                            <td key={index}>
-                              {typeof item[key3] === "boolean"
-                                ? item[key3].toString()
-                                : typeof item[key3] === "number"
-                                ? item[key3].toFixed(2)
-                                : key3 === "lastUpdate"
-                                ? item[key3]
-                                : item[key3]}
-                            </td>
-                          );
-                        }
-                      })}
-                    </tr>
+                    <React.Fragment key={index}>
+                      {refInsertRow.current && (
+                        <tr
+                          style={{
+                            border: "2px solid red",
+                            color: "blue",
+                            backgroundColor: "lightgray",
+                          }}
+                        >
+                          <td colSpan={5}></td>
+                        </tr>
+                      )}
+                      {refInsertRow.current && (
+                        <tr
+                          style={{
+                            border: "2px solid red",
+                            color: "blue",
+                          }}
+                        >
+                          <td colSpan={2}>
+                            {keyToUse === "mohId" ? "" : "TOTAL"}
+                          </td>
+                          <td>
+                            {keyToUse === "mohId"
+                              ? ""
+                              : refTotalWip.current.toFixed(2)}
+                          </td>
+                          <td colSpan={2}></td>
+                        </tr>
+                      )}
+                      {refInsertRow.current && (
+                        <tr
+                          style={{
+                            border: "2px solid red",
+                            color: "blue",
+                            backgroundColor: "black",
+                          }}
+                        >
+                          <td colSpan={5}></td>
+                        </tr>
+                      )}
+                      <tr key={index}>
+                        {Object.keys(item).map((key3, index) => {
+                          let lastUpdate = "";
+                          if (key3 === "lastUpdate") {
+                            const dt = new Date(Date.parse(item[key3]));
+                            lastUpdate = `${dt.toLocaleDateString()} ${dt.toLocaleTimeString()}`;
+                          }
+                          if (fields.includes(key3)) {
+                            return (
+                              <td key={index}>
+                                {typeof item[key3] === "boolean"
+                                  ? item[key3].toString()
+                                  : typeof item[key3] === "number"
+                                  ? item[key3].toFixed(2)
+                                  : key3 === "lastUpdate"
+                                  ? lastUpdate
+                                  : item[key3]}
+                              </td>
+                            );
+                          }
+                        })}
+                      </tr>
+                    </React.Fragment>
                   );
                 })}
               </tbody>
