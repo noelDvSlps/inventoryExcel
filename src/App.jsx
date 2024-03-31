@@ -35,6 +35,14 @@ function App() {
 
     // Process Data (add a new row)
     var ws = workbook.Sheets["Sheet1"];
+    ws["!cols"] = [
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 30 },
+    ]; // set column A width to 10 characters
+
     XLSX.utils.sheet_add_aoa(ws, [["Created " + new Date().toISOString()]], {
       origin: -1,
     });
