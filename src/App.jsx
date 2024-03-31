@@ -6,6 +6,7 @@ import { getInventoryWips } from "./api/wip/getInventoryWips";
 
 function App() {
   const [data, setData] = useState([]);
+  const [wcs, setWcs] = useState(true);
   const [dataTable, setDataTable] = useState([]);
   const [fields, setFields] = useState([]);
   const refSort = useRef({ key: "mohId", ascending: true });
@@ -15,7 +16,14 @@ function App() {
   const refTempQty = useRef(0);
   const getWips = async () => {
     const wips = await getInventoryWips();
-    setData(wips.data);
+    const tableData = wips.data.filter((item) => {
+      if (wcs === true) {
+        return item.mohId > "30000";
+      }
+      return item.mohId < "30000";
+    });
+
+    setData(tableData);
   };
 
   const scrapeData = () => {
@@ -65,7 +73,7 @@ function App() {
 
   useEffect(() => {
     getWips();
-  }, []);
+  }, [wcs]);
 
   useEffect(() => {
     setFields(["mohId", "item", "wipQty", "user", "lastUpdate"]);
@@ -76,9 +84,12 @@ function App() {
 
   return (
     <div>
-      <button id="btn-Excel" onClick={scrapeData}>
-        Download Excel File
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+        <button onClick={() => setWcs(!wcs)}>Toggle</button>
+        <button id="btn-Excel" onClick={scrapeData}>
+          Download Excel File
+        </button>
+      </div>
       <div
         style={{
           maxHeight: "80vh",
@@ -156,8 +167,9 @@ function App() {
                     refInsertRow.current = false;
                     refTotalWip.current = item.wipQty;
                   }
-                  console.log("refTotalWip.current");
-                  console.log(refTotalWip.current);
+                  console.log(index, refTotalWip.current);
+                  // console.log("refTotalWip.current");
+                  // console.log(refTotalWip.current);
                   return (
                     <React.Fragment key={index}>
                       {refInsertRow.current && (
@@ -165,23 +177,18 @@ function App() {
                           style={{
                             border: "2px solid red",
                             color: "blue",
-                            backgroundColor: "lightgray",
                           }}
                         >
-                          <td colSpan={5}></td>
-                        </tr>
-                      )}
-                      {refInsertRow.current && (
-                        <tr
-                          style={{
-                            border: "2px solid red",
-                            color: "blue",
-                          }}
-                        >
-                          <td colSpan={2}>
+                          <td
+                            colSpan={2}
+                            style={{
+                              textAlign: "right",
+                              textDecoration: "underline",
+                            }}
+                          >
                             {keyToUse === "mohId" ? "" : "TOTAL"}
                           </td>
-                          <td>
+                          <td style={{ textDecoration: "underline" }}>
                             {keyToUse === "mohId"
                               ? ""
                               : refTotalWip.current.toFixed(2)}
@@ -189,17 +196,7 @@ function App() {
                           <td colSpan={2}></td>
                         </tr>
                       )}
-                      {refInsertRow.current && (
-                        <tr
-                          style={{
-                            border: "2px solid red",
-                            color: "blue",
-                            backgroundColor: "black",
-                          }}
-                        >
-                          <td colSpan={5}></td>
-                        </tr>
-                      )}
+
                       <tr key={index}>
                         {Object.keys(item).map((key3, index) => {
                           let lastUpdate = "";
@@ -225,6 +222,30 @@ function App() {
                     </React.Fragment>
                   );
                 })}
+                {refSort.current.key === "item" && (
+                  <tr
+                    style={{
+                      border: "2px solid red",
+                      color: "blue",
+                    }}
+                  >
+                    <td
+                      colSpan={2}
+                      style={{
+                        textAlign: "right",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {"TOTAL"}
+                    </td>
+                    <td style={{ textDecoration: "underline" }}>
+                      {refInsertRow.current
+                        ? refTempQty.current.toFixed(2)
+                        : refTotalWip.current.toFixed(2)}
+                    </td>
+                    <td colSpan={2}></td>
+                  </tr>
+                )}
               </tbody>
             </>
           )}
