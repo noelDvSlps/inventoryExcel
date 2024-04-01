@@ -7,7 +7,7 @@ import { getInventoryWips } from "./api/wip/getInventoryWips";
 function App() {
   const [data, setData] = useState([]);
   const [wcs, setWcs] = useState(true);
-  const [ca, setCa] = useState(true);
+  const [ca, setCa] = useState(null);
   const [dataTable, setDataTable] = useState([]);
   const [fields, setFields] = useState([]);
   const refSort = useRef({ key: "mohId", ascending: true });
@@ -27,7 +27,10 @@ function App() {
       if (ca === true) {
         return item.location === "CA";
       }
-      return item.location === "TX";
+      if (ca === false) {
+        return item.location === "TX";
+      }
+      return item;
     });
     console.log(tableData2);
 
@@ -100,17 +103,17 @@ function App() {
 
   return (
     <div>
-      <div>{ca ? "CALIFORNIA" : "TEXAS"}</div>
+      <div>{ca === null ? "ALL" : ca === true ? "CALIFORNIA" : "TEXAS"}</div>
       <div>{wcs ? "WCS" : "AXS"}</div>
 
       <div style={{ display: "flex", justifyContent: "space-evenly" }}>
         <button
           onClick={() => {
-            setCa(!ca);
+            setCa(ca === null ? true : ca === true ? false : null);
             // getWips();
           }}
         >
-          Change to {!ca ? "CA" : "TX"}
+          Change to {ca === null ? "CA" : ca === true ? "TX" : "ALL"}
         </button>
         <button
           onClick={() => {
