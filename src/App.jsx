@@ -7,6 +7,7 @@ import { getInventoryWips } from "./api/wip/getInventoryWips";
 function App() {
   const [data, setData] = useState([]);
   const [wcs, setWcs] = useState(true);
+  const [ca, setCa] = useState(true);
   const [dataTable, setDataTable] = useState([]);
   const [fields, setFields] = useState([]);
   const refSort = useRef({ key: "mohId", ascending: true });
@@ -22,8 +23,15 @@ function App() {
       }
       return item.mohId < "30000";
     });
+    const tableData2 = tableData.filter((item) => {
+      if (ca === true) {
+        return item.location === "CA";
+      }
+      return item.location === "TX";
+    });
+    console.log(tableData2);
 
-    setData(tableData);
+    setData(tableData2);
   };
 
   const scrapeData = () => {
@@ -81,7 +89,7 @@ function App() {
 
   useEffect(() => {
     getWips();
-  }, [wcs]);
+  }, [wcs, ca]);
 
   useEffect(() => {
     setFields(["mohId", "item", "wipQty", "user", "lastUpdate"]);
@@ -92,8 +100,25 @@ function App() {
 
   return (
     <div>
+      <div>{ca ? "CALIFORNIA" : "TEXAS"}</div>
+      <div>{wcs ? "WCS" : "AXS"}</div>
+
       <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-        <button onClick={() => setWcs(!wcs)}>Toggle</button>
+        <button
+          onClick={() => {
+            setCa(!ca);
+            // getWips();
+          }}
+        >
+          Change to {!ca ? "CA" : "TX"}
+        </button>
+        <button
+          onClick={() => {
+            setWcs(!wcs);
+          }}
+        >
+          Change to {!wcs ? "WCS" : "AXS"}
+        </button>
         <button id="btn-Excel" onClick={scrapeData}>
           Download Excel File
         </button>
@@ -175,9 +200,7 @@ function App() {
                     refInsertRow.current = false;
                     refTotalWip.current = item.wipQty;
                   }
-                  console.log(index, refTotalWip.current);
-                  // console.log("refTotalWip.current");
-                  // console.log(refTotalWip.current);
+
                   return (
                     <React.Fragment key={index}>
                       {refInsertRow.current && (
